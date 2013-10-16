@@ -30,6 +30,13 @@ def return_result(result=True):
 def authenticated(user, host, password):
     """Authenticates a user.
     """
+    # XXX
+    #
+    # here we'll see if we can simply pass the browser id
+    # token as the password for verification and
+    # use PyBrowserID with the local verifier
+    #
+    # XXX I just wonder if ejabberd will dig this..
     return True
 
 
