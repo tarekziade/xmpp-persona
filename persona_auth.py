@@ -3,6 +3,10 @@
 # External auth script for ejabberd that enable auth against Persona.
 import sys
 from struct import unpack, pack, error as struct_error
+import browserid
+
+
+verifier = browserid.LocalVerifier(['*'])
 
 
 def debug(msg):
@@ -31,13 +35,12 @@ def return_result(result=True):
 def auth(user, host, password):
     """Authenticates a user.
     """
-    # XXX
-    #
-    # here we'll see if we can simply pass the browser id
-    # token as the password for verification and
-    # use PyBrowserID with the local verifier
-    #
-    # XXX I just wonder if ejabberd will dig this..
+    # the password is the assertion
+    try:
+        verifier.verify(password, host)
+    except ValueError, UnicodeDecodeError:
+        return False
+
     return True
 
 
