@@ -2,7 +2,7 @@
 #
 # External auth script for ejabberd that enable auth against Persona.
 import sys
-from struct import unpack
+from struct import unpack, pack, error as struct_error
 
 
 def debug(msg):
@@ -16,6 +16,7 @@ def read_stdin():
     # get the record size in the first two bytes
     size, = unpack('>h', sys.stdin.read(2))
 
+
     # read the record
     return sys.stdin.read(size).split(':')
 
@@ -27,7 +28,7 @@ def return_result(result=True):
     sys.stdout.flush()
 
 
-def authenticated(user, host, password):
+def auth(user, host, password):
     """Authenticates a user.
     """
     # XXX
@@ -43,7 +44,11 @@ def authenticated(user, host, password):
 def main():
     debug('Mozilla Persona Authentication Plugin...')
     while True:
-        request = read_stdin()
+        try:
+            request = read_stdin()
+        except struct_error:
+            return_result(False)
+
         command = request[0]
 
         if command == 'auth':
