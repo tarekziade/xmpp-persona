@@ -2,21 +2,90 @@
 <html>
   <head>
     <title>Strophe.js Basic Example</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
     <script src='jquery.min.js'></script>
     <script src='strophe.js'></script>
     <script src='basic.js'></script>
+    <script src='persona.js'></script>
   </head>
   <body>
-    <div id='login' style='text-align: center'>
-      <form name='cred'>
-        <label for='jid'>JID:</label>
-        <input type='text' id='jid'>
-        <label for='pass'>Password:</label>
-        <input type='password' id='pass'>
-        <input type='button' id='connect' value='connect'>
-      </form>
-    </div>
     <hr>
-    <div id='log'></div>
+
+    <div id='log'>Strophe Status</div>
+    %if session.get('logged_in'):
+      Logged in as <span id="user">{{session['email']}}</span>
+    %else:
+      Logged in as <span id="user">No one!</span>
+    %end
+
+
+    <div>
+      <button id="signin">Sign In</button>
+    </div>
+
+    <div>
+      <button id="signout">Sign Out</button>
+    </div>
+
+    <script>
+      var signinLink = document.getElementById('signin');
+      if (signinLink) {
+          signinLink.onclick = function() { navigator.id.request(); };
+        }
+
+        var signoutLink = document.getElementById('signout');
+        if (signoutLink) {
+            signoutLink.onclick = function() { navigator.id.logout(); };
+          }
+
+
+
+
+%if session.get('logged_in'):
+var currentUser = '{{session['email']}}';
+%else:
+var currentUser = null;
+%end
+
+navigator.id.watch({
+  loggedInUser: currentUser,
+  onlogin: function(assertion) {
+    $.ajax({
+      type: 'POST',
+      url: '/login',
+      dataType: 'json',
+      data: {assertion: assertion},
+      success: function(res, status, xhr) {
+        connection._hitError = function (reqStatus) {
+                console.log(reqStatus);
+                this.errors++;
+                if (this.errors > 4) this._onDisconnectTimeout();
+};
+
+        // for now we just replace the domain by localhost
+        var user = res.email.split('@')[0];
+        connection.connect(user + '@localhost', assertion, onConnect);
+
+        currentUser = res.email;
+        $('#user').text(res.email);
+      },
+      error: function(xhr, status, err) {
+        navigator.id.logout();
+        alert("Login failure: " + err);
+      }
+    });
+  },
+  onlogout: function() {
+    $.ajax({
+      type: 'POST',
+      url: '/logout', // This is a URL on your website.
+      success: function(res, status, xhr) {
+        connection.disconnect();
+        window.location.reload(); },
+      error: function(xhr, status, err) { alert("Logout failure: " + err); }
+    });
+  }
+});
+    </script>
   </body>
 </html>
